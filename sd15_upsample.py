@@ -354,9 +354,6 @@ class StableDiffusionUpsamplingGuidancePipeline(StableDiffusionPipeline):
                 a_t = self.scheduler.alphas_cumprod[t]
                 p = a_t + (1 - a_t) / (m ** 2)
                 p_factor = 1 / (p ** 0.5)
-                # a_tau = (m ** 2 * a_t) / (1 - (1 - m ** 2) * a_t)
-                # tau = self.find_closest_index(self.scheduler.alphas_cumprod, a_tau)
-                # tau = torch.tensor(tau).to(t.device)
                 tau = taus[t].to(t.device)
                 d_latent_model_input = self.scheduler.scale_model_input(d_latent_model_input, tau)
 
@@ -382,18 +379,9 @@ class StableDiffusionUpsamplingGuidancePipeline(StableDiffusionPipeline):
                     return_dict=False,
                 )[0]
 
-                # epsilon_theta(xt, t)
-                # epsilon_theta(D[xt]/p, tau)
-                noise_adj = self.upsampling(d_noise_pred, scale_factor=scale_factor) + noise_pred - self.upsampling(self.downsampling(noise_pred))
+                noise_adj = self.upsampling(d_noise_pred/m, scale_factor=scale_factor) + noise_pred - self.upsampling(self.downsampling(noise_pred))
                 us_wt = time_factor * torch.heaviside(t - (1 - us_eta) * 1000, torch.tensor(0.0).to(t.device))
                 noise_pred = (1 - us_wt) * noise_pred + us_wt * noise_adj
-
-
-
-                # d_noise_pred = d_noise_pred / m
-                # d_latent_model_output = linear_average_downsample(noise_pred, m)
-                # noise_pred = noise_pred + nearest_upsample(d_noise_pred - d_latent_model_output, m)
-
 
                 # perform guidance
                 if self.do_classifier_free_guidance:
