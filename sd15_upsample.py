@@ -94,7 +94,7 @@ class StableDiffusionUpsamplingGuidancePipeline(StableDiffusionPipeline):
     def get_tau(self, scale_factor, alphas):
         # m: scale_factor
         # alphas: cumprod of alpha
-        alphas = torch.sqrt(alphas)
+        # alphas = torch.sqrt(alphas)
         snr = alphas / (1 - alphas)
         snr_low = alphas / (1 - alphas) * scale_factor ** 2
         log_snr, log_snr_low = torch.log(snr), torch.log(snr_low)
